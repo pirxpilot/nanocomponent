@@ -1,27 +1,26 @@
-var Nanocomponent = require('../../')
-var html = require('nanohtml')
+const Nanocomponent = require('../../')
+const html = require('nanohtml')
+
+class SimpleComponent extends Nanocomponent {
+  constructor (name) {
+    super()
+    this.name = name
+    this.color = null
+  }
+
+  createElement (color) {
+    this.color = color || 'blue'
+    return html`
+        <div>
+          <p class="name">${this.name}</p>
+          <p class="color">${this.color}</p>
+        </div>
+      `
+  }
+
+  update (color) {
+    return this.color !== color
+  }
+}
 
 module.exports = SimpleComponent
-
-function SimpleComponent (name) {
-  if (!(this instanceof SimpleComponent)) return new SimpleComponent(name)
-  this.name = name
-  this.color = null
-  Nanocomponent.call(this)
-}
-
-SimpleComponent.prototype = Object.create(Nanocomponent.prototype)
-
-SimpleComponent.prototype.createElement = function (color) {
-  this.color = color || 'blue'
-  return html`
-      <div>
-        <p class="name">${this.name}</p>
-        <p class="color">${this.color}</p>
-      </div>
-    `
-}
-
-SimpleComponent.prototype.update = function (color) {
-  return this.color !== color
-}

@@ -1,27 +1,27 @@
-var test = require('tape')
-var SimpleComponent = require('./simple')
-var BlogSection = require('./blog-section')
-var Nanocomponent = require('../../')
-var html = require('nanohtml')
-var compare = require('../../compare')
-var nanobus = require('nanobus')
+const test = require('tape')
+const SimpleComponent = require('./simple')
+const BlogSection = require('./blog-section')
+const Nanocomponent = require('../../')
+const html = require('nanohtml')
+const compare = require('../../compare')
+const nanobus = require('nanobus')
 
 function makeID () {
-  return 'testid-' + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+  return `testid-${Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)}`
 }
 
 function createTestElement () {
-  var testRoot = document.createElement('div')
+  const testRoot = document.createElement('div')
   testRoot.id = makeID()
   document.body.appendChild(testRoot)
   return testRoot
 }
 
-test('can create a simple component', function (t) {
-  var testRoot = createTestElement()
+test('can create a simple component', t => {
+  const testRoot = createTestElement()
 
   // Create instance and mount
-  var comp = new SimpleComponent('yosh')
+  const comp = new SimpleComponent('yosh')
   testRoot.appendChild(comp.render('green'))
   t.ok(comp.element, 'component created and mounted in page')
   t.equal(comp.element.querySelector('.name').innerText, 'yosh', 'instance options correctly rendered')
@@ -29,7 +29,7 @@ test('can create a simple component', function (t) {
   t.equal(comp.element.dataset.proxy, undefined, 'not a proxy element')
 
   // Update mounted component and inspect proxy
-  var proxy = comp.render('red')
+  const proxy = comp.render('red')
   t.ok(proxy.dataset.proxy != null, 'proxy is returned on mounted component')
   t.equal(proxy.dataset.nanocomponent, comp._ncID, 'proxy is tagged with the correct ncID')
   t.equal(proxy.nodeName, comp.element.nodeName, 'proxy is of same type')
@@ -53,52 +53,42 @@ test('can create a simple component', function (t) {
   t.end()
 })
 
-test('proxy node types match the root node returned from createElement', function (t) {
-  var testRoot = createTestElement()
-  var comp = new BlogSection()
+test('proxy node types match the root node returned from createElement', t => {
+  const testRoot = createTestElement()
+  const comp = new BlogSection()
   testRoot.appendChild(comp.render(['hey', 'hi', 'howdy']))
   t.ok(comp.element, 'component created and mounted in page')
   t.equal(comp.element.nodeName, 'SECTION', 'correctly rendered')
   t.equal(comp.element.dataset.proxy, undefined, 'not a proxy element')
 
-  var proxy = comp.render(['by', 'bye', 'cya'])
+  const proxy = comp.render(['by', 'bye', 'cya'])
   t.equal(proxy.nodeName, comp.element.nodeName, 'proxy is of same type as the root node of createElement')
 
   t.end()
 })
 
-test('missing createElement', function (t) {
-  function Missing () {
-    if (!(this instanceof Missing)) return new Missing()
-    Nanocomponent.call(this)
-  }
+test('missing createElement', t => {
+  class Missing extends Nanocomponent {}
 
-  Missing.prototype = Object.create(Nanocomponent.prototype)
-
-  var badMissing = new Missing()
+  const badMissing = new Missing()
   t.throws(badMissing.render.bind(badMissing), new RegExp(/createElement should be implemented/), 'call to render throws if createElement is missing')
   t.end()
 })
 
-test('missing update', function (t) {
-  function Missing () {
-    if (!(this instanceof Missing)) return new Missing()
-    Nanocomponent.call(this)
+test('missing update', t => {
+  class Missing extends Nanocomponent {
+    createElement () { return html`<div>hey</div>` }
   }
 
-  Missing.prototype = Object.create(Nanocomponent.prototype)
-
-  Missing.prototype.createElement = function () { return html`<div>hey</div>` }
-
-  var badMissing = new Missing()
-  var testRoot = createTestElement()
+  const badMissing = new Missing()
+  const testRoot = createTestElement()
   testRoot.appendChild(badMissing.render())
   t.throws(badMissing.render.bind(badMissing), new RegExp(/update should be implemented/), 'call to update throws if update is missing')
   t.end()
 })
 
-test('lifecycle tests', function (t) {
-  var testRoot = createTestElement()
+test('lifecycle tests', t => {
+  const testRoot = createTestElement()
   class LifeCycleComp extends Nanocomponent {
     constructor () {
       super()
@@ -119,8 +109,8 @@ test('lifecycle tests', function (t) {
       return html`<div>${text}</div>`
     }
 
-    update (text) {
-      var shouldUpdate = compare(this.arguments, arguments)
+    update () {
+      const shouldUpdate = compare(this.arguments, arguments)
       this.testState.update++
       return shouldUpdate
     }
@@ -144,7 +134,7 @@ test('lifecycle tests', function (t) {
     }
   }
 
-  var comp = new LifeCycleComp()
+  const comp = new LifeCycleComp()
   comp.bus.on('load', () => window.requestAnimationFrame(onLoad))
   comp.bus.on('unload', () => window.requestAnimationFrame(onUnload))
 
@@ -156,7 +146,7 @@ test('lifecycle tests', function (t) {
     load: 0,
     unload: 0
   }, 'no lifecycle methods run on instantiation')
-  var el = comp.render('hey')
+  const el = comp.render('hey')
   t.deepEqual(comp.testState, {
     'create-element': 1,
     update: 0,
